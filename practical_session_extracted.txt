@@ -1,0 +1,73 @@
+Organization-Centric Coordination
+
+Labs
+
+During this practical session, you will have to understand and design a coordination process based on
+organization.
+
+The use case remains the same: a multi-agent system is used for coordinating the building of a house. Now we
+focus on the coordination process based on an organizational model. In this version, the construction is started,
+i.e. the contracting phase is ended (a company is allocated to each task) and we consider the execution phase.
+
+Part 1.
+The organization of the building is described in the XML file src/org/house-os.xml.
+
+1)
+
+Three parts are described for specifying an organization in JaCaMo:
+
+a.
+
+b.
+
+Structural specification: what are the roles and groups involved in the house building? What
+are their links?
+Functional specification: How the agents will build the house? What will be the order of the
+building?
+
+c. Normative specification: What are the rules of building an house?
+
+2) Using an example of a specific task in the xml file, how this is processed for each specification? Use the
+
+3)
+
+line number in the xml file for the reference to the required part of the file for the chosen task.
+Find in the *.asl files how organization model influences the behavior of the agents. For each, give the
+instruction and explain the result.
+
+4) Give the graphical representation of the structural and functional specification for building an house.
+5) Discuss pro and cons of this organization approach for coordination.
+
+Part 2.
+Practical work 1
+
+1)
+
+2)
+
+3)
+
+Execute the use case (see agent-centric organization practical session) and analyze the result in the
+“Organisation Inspector” or on the website (better solution). The address is in the execution trace “Moise
+Http Server running on http://127.0.0.1:3271”. Look at the definition of the group.
+The initial organization has to be changed. The electrical system must be installed in parallel of plumbing.
+Exterior and interior paint must be done at end in parallel. Change the organization according to this
+modification.
+That is the crisis and there is a new budget restriction, the owner wants to do the interior paint task.
+Change the organization according to this modification. Is it enough? Do modifications in order that the
+house building is completed. What happens? Which modification do you have to do to satisfy the
+modification of the owner?
+
+Practical work 2
+
+4) Propose your own organization for building. Propose an adapted new organization file and modify the
+
+code accordingly. You can change order, rules, … Explain your solution.
+
+Deliverable
+A .zip file containing (i) a PDF document with your answer to the questions in the Part 1 and Part 2, (ii) a folder
+named “practical-work-1” with the files changed from the “initial” code for addressing the Practical work 1, and
+(iii) a folder named “practical-work-2” with the files changed from the “initial” code for addressing the Practical
+work 2.
+
+

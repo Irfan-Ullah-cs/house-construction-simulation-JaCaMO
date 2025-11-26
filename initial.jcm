@@ -1,0 +1,41 @@
+/*
+    JaCaMo Project for the house building scenario used
+    initially in the Multi-Agent Programming Tutorial @ EASSS 2010
+
+*/
+
+mas house_building {
+
+   // the agent that wants to build a house
+   agent giacomo : owner.asl {
+   	focus: site.housegui   // agent focus on the artifact housegui in workspace site
+   }
+
+	// builder agents (see their code for details)
+   agent companyA {  
+	focus: site.housegui
+   }
+   
+   agent companyB {
+   	  focus: site.housegui
+   }
+   
+   agent companyC {
+      instances: 5    // 5 agents of the type companyC
+      focus: site.housegui
+   }
+   
+   agent companyD {
+      instances: 13  // 13 agents of the type companyD
+      focus: site.housegui
+   }
+   
+   agent companyE {
+   	focus: site.housegui
+   }
+
+   workspace site {   // workspace site shared between the agents
+   	artifact housegui : simulator.House  // shared artifact for the house
+   	artifact tuple_space_id : cartago.tools.TupleSpace // Shared tuple space for agents to communicate
+   }
+}
