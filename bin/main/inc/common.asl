@@ -30,11 +30,11 @@ i_am_winning(Art) :- currentWinner(W)[artifact_id(Art)] & .my_name(Me) & .term2s
 +winner(Task)[source(Owner)] : not coordinating
    <- ?tuple_space_art_id(TupleSpaceId);
       .my_name(Me);
-      .term2string(Me, MeStr);
+      .term2string(Me, MeStr);  // ADD THIS
       +coordinating;
       +my_winning_task(Task);
-      out(task_info, MeStr, Task)[artifact_id(TupleSpaceId)];
-      out(done, MeStr)[artifact_id(TupleSpaceId)];
+      out(task_info, MeStr, Task)[artifact_id(TupleSpaceId)];  // STORE STRING
+      out(done, MeStr)[artifact_id(TupleSpaceId)];  // ALSO FIX THIS
       println(Me, " won task: ", Task);
       .wait(1500);
       !show_shared_info.
@@ -42,11 +42,10 @@ i_am_winning(Art) :- currentWinner(W)[artifact_id(Art)] & .my_name(Me) & .term2s
 +winner(Task)[source(Owner)] : coordinating
    <- ?tuple_space_art_id(TupleSpaceId);
       .my_name(Me);
-      .term2string(Me, MeStr);
+      .term2string(Me, MeStr);  // ADD THIS
       +my_winning_task(Task);
-      out(task_info, MeStr, Task)[artifact_id(TupleSpaceId)];
+      out(task_info, MeStr, Task)[artifact_id(TupleSpaceId)];  // STORE STRING
       println(Me, " won task: ", Task).
-
 // Step 5 - Plan for showing all shared info except own
 +!show_shared_info
    <- ?tuple_space_art_id(TupleSpaceId);
@@ -60,17 +59,17 @@ i_am_winning(Art) :- currentWinner(W)[artifact_id(Art)] & .my_name(Me) & .term2s
 
 -!collect_all_tuples(TupleSpaceId, Collected)
    <- .my_name(Me);
-      .term2string(Me, MeStr);  // Convert ONCE here
-      !restore_and_display(TupleSpaceId, Collected, MeStr).  // Pass STRING
+      !restore_and_display(TupleSpaceId, Collected, Me).
 
-+!restore_and_display(TupleSpaceId, [], MeStr)
++!restore_and_display(TupleSpaceId, [], Me)
    <- true.
 
-+!restore_and_display(TupleSpaceId, [[Agent,Task]|Rest], MeStr)
++!restore_and_display(TupleSpaceId, [[Agent,Task]|Rest], Me)
    <- out(task_info, Agent, Task)[artifact_id(TupleSpaceId)];
-      if (Agent \== MeStr) {  // Compare string to string directly
+      .term2string(Me, MeStr);
+      if (Agent \== MeStr) {
          println("  Agent: ", Agent, " won Task: ", Task);
       } else {
          println("DEBUG: FILTERED OUT my own task: ", Task);
       };
-      !restore_and_display(TupleSpaceId, Rest, MeStr).  // Pass MeStr through recursion
+      !restore_and_display(TupleSpaceId, Rest, Me).
