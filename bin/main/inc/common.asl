@@ -27,64 +27,50 @@ i_am_winning(Art) :- currentWinner(W)[artifact_id(Art)] & .my_name(Me) & .term2s
       // Store the TupleSpaceId as a belief for later use if needed
       +tuple_space_art_id(TupleSpaceId).
 
-// Plan triggered when agent receives winner(Task) belief
-+winner(Task)[source(Owner)]
++winner(Task)[source(Owner)] : not coordinating
    <- ?tuple_space_art_id(TupleSpaceId);
       .my_name(Me);
-      out(task_info, Me, Task)[artifact_id(TupleSpaceId)];
-      out(done, Me)[artifact_id(TupleSpaceId)];
+      .term2string(Me, MeStr);
+      +coordinating;
+      +my_winning_task(Task);
+      out(task_info, MeStr, Task)[artifact_id(TupleSpaceId)];
+      out(done, MeStr)[artifact_id(TupleSpaceId)];
       println(Me, " won task: ", Task);
-      // ===== Step c - RD, observing another tuple (Uncomment these for step 2) =====
-      // rd(task_info, Other, Task);
-      // println("I (", Me, ") see another tuple: (", Other, ",", Task, ")");
+      .wait(1500);
+      !show_shared_info.
 
-      // ===== Step 3 - IN, removing tuple (Uncomment these for step 3) =====
-      // in(task_info, Other, Task);
-      // println("I (", Me, ") removed tuple: (", Other, ",", Task, ")");
-
-      // ===== Step 4 - Try to use rd/in on a non-existent template (Uncomment these for step 4) =====
-      // rd(running_task, Other);
-      // println("Tried to read a tuple (running_task, Other): ", Other);
-      // in(running_task, Other);
-      // println("Tried to remove tuple (running_task, Other): ", Other);
-
-      // ===== Step 5 - Call show_shared_info to display other agents' tasks =====
-      // .wait(10000); // Give other agents more time to post their tuples (5 seconds delay)
-      // !show_shared_info;
-
-      out(done, Me)[artifact_id(TupleSpaceId)];
-      !wait_until_all_done(Me, TupleSpaceId);
-
-.
-
-+!wait_until_all_done(Me, TupleSpaceId)
-   : count(done, X)[artifact_id(TupleSpaceId)] & X < 10   // 10 = number of agents
-   <- .wait(200);
-      !wait_until_all_done(Me, TupleSpaceId).
-
-+!wait_until_all_done(Me, TupleSpaceId)
-   : count(done, 10)[artifact_id(TupleSpaceId)]
-   <- !show_shared_info.
-
++winner(Task)[source(Owner)] : coordinating
+   <- ?tuple_space_art_id(TupleSpaceId);
+      .my_name(Me);
+      .term2string(Me, MeStr);
+      +my_winning_task(Task);
+      out(task_info, MeStr, Task)[artifact_id(TupleSpaceId)];
+      println(Me, " won task: ", Task).
 
 // Step 5 - Plan for showing all shared info except own
 +!show_shared_info
    <- ?tuple_space_art_id(TupleSpaceId);
       .my_name(Me);
       println(Me, " sees shared auction info:");
-      !read_and_remove_all(Me, TupleSpaceId, []).
+      !collect_all_tuples(TupleSpaceId, []).
 
-/* Recursive clause: read all tuples without removing them */
-+!read_and_remove_all(Me, TupleSpaceId, Collected)
-   : rdp(task_info, _, _)[artifact_id(TupleSpaceId)]
-   <- rdp(task_info, Agent, Task)[artifact_id(TupleSpaceId)];
-      !read_and_remove_all(Me, TupleSpaceId, [[Agent,Task]|Collected]).
++!collect_all_tuples(TupleSpaceId, Collected)
+   <- inp(task_info, Agent, Task)[artifact_id(TupleSpaceId)];
+      !collect_all_tuples(TupleSpaceId, [[Agent,Task]|Collected]).
 
-/* Base clause */
-+!read_and_remove_all(Me, TupleSpaceId, Collected)
-   : not rdp(task_info, _, _)[artifact_id(TupleSpaceId)]
-   <- for (.member([Agent, Task], Collected)) {
-         if (Agent \== Me) {
-            println("  Agent: ", Agent, " won Task: ", Task);
-         }
-      }.
+-!collect_all_tuples(TupleSpaceId, Collected)
+   <- .my_name(Me);
+      .term2string(Me, MeStr);  // Convert ONCE here
+      !restore_and_display(TupleSpaceId, Collected, MeStr).  // Pass STRING
+
++!restore_and_display(TupleSpaceId, [], MeStr)
+   <- true.
+
++!restore_and_display(TupleSpaceId, [[Agent,Task]|Rest], MeStr)
+   <- out(task_info, Agent, Task)[artifact_id(TupleSpaceId)];
+      if (Agent \== MeStr) {  // Compare string to string directly
+         println("  Agent: ", Agent, " won Task: ", Task);
+      } else {
+         println("DEBUG: FILTERED OUT my own task: ", Task);
+      };
+      !restore_and_display(TupleSpaceId, Rest, MeStr).  // Pass MeStr through recursion
