@@ -6,6 +6,8 @@ i_am_winning(Art) :- currentWinner(W)[artifact_id(Art)] & .my_name(Me) & .term2s
    <- !present_skills;
       !discover_tuple_space.
 
+
+
 +!present_skills
    <- .my_name(Me);
       println(Me, ": Presenting capabilities to owner agent.");
@@ -32,14 +34,27 @@ i_am_winning(Art) :- currentWinner(W)[artifact_id(Art)] & .my_name(Me) & .term2s
 
 // === ROOM COORDINATION (Exercise 2 Part 2) ===
 
+// Room mapping for parallelism
+room_for_task("SitePreparation", "kitchen").
+room_for_task("Floors", "kitchen").
+room_for_task("Walls", "kitchen").
+room_for_task("Roof", "bedroom1").
+room_for_task("WindowsDoors", "bedroom2").
+room_for_task("Plumbing", "kitchen").
+room_for_task("ElectricalSystem", "bathroom").
+room_for_task("Painting", "bedroom1").
+
 +winner(Task)[source(Owner)] : not coordinating
    <- ?tuple_space_art_id(TupleSpaceId);
       .my_name(Me);
       .term2string(Me, MeStr);
+      ?room_for_task(Task, Room);
+      in(Room, Day)[artifact_id(TupleSpaceId)];
+      out(Room, Day + 1)[artifact_id(TupleSpaceId)];
       +coordinating;
-      out(task_info, MeStr, Task)[artifact_id(TupleSpaceId)];
+      out(task_info, MeStr, Task, Room, Day)[artifact_id(TupleSpaceId)];
       out(ready, MeStr)[artifact_id(TupleSpaceId)];
-      println(Me, " won task: ", Task);
+      println(Me, " reserved ", Room, " day ", Day, " for ", Task);
       .wait(4000);
       !show_shared_info.
 
@@ -47,9 +62,12 @@ i_am_winning(Art) :- currentWinner(W)[artifact_id(Art)] & .my_name(Me) & .term2s
    <- ?tuple_space_art_id(TupleSpaceId);
       .my_name(Me);
       .term2string(Me, MeStr);
-      out(task_info, MeStr, Task)[artifact_id(TupleSpaceId)];
+      ?room_for_task(Task, Room);
+      in(Room, Day)[artifact_id(TupleSpaceId)];
+      out(Room, Day + 1)[artifact_id(TupleSpaceId)];
+      out(task_info, MeStr, Task, Room, Day)[artifact_id(TupleSpaceId)];
       out(ready, MeStr)[artifact_id(TupleSpaceId)];
-      println(Me, " won task: ", Task).
+      println(Me, " reserved ", Room, " day ", Day, " for ", Task).
 
 +!show_shared_info
    <- ?tuple_space_art_id(TupleSpaceId);
@@ -73,18 +91,18 @@ i_am_winning(Art) :- currentWinner(W)[artifact_id(Art)] & .my_name(Me) & .term2s
 
 +!read_display_restore(TupleSpaceId, MeStr)
    <- !collect_all_tuples(TupleSpaceId);
-      println(MeStr, " sees room reservation info:");
-      for (temp_info(Agent, Task) & Agent \== MeStr) {
-         println("  Agent: ", Agent, " won Task: ", Task)
+      println(MeStr, " PARALLEL SCHEDULE:");
+      for (temp_info(Agent, Task, Room, Day)) {
+         println("  ", Agent, ": ", Task, " in ", Room, " on day ", Day)
       };
-      for (temp_info(Agent, Task)) {
-         out(task_info, Agent, Task)[artifact_id(TupleSpaceId)]
+      for (temp_info(Agent, Task, Room, Day)) {
+         out(task_info, Agent, Task, Room, Day)[artifact_id(TupleSpaceId)]
       };
-      .abolish(temp_info(_,_)).
+      .abolish(temp_info(_,_,_,_)).
 
 +!collect_all_tuples(TupleSpaceId)
-   <- inp(task_info, Agent, Task)[artifact_id(TupleSpaceId)];
-      +temp_info(Agent, Task);
+   <- inp(task_info, Agent, Task, Room, Day)[artifact_id(TupleSpaceId)];
+      +temp_info(Agent, Task, Room, Day);
       !collect_all_tuples(TupleSpaceId).
 
 -!collect_all_tuples(TupleSpaceId)

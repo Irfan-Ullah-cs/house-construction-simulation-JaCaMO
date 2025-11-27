@@ -106,7 +106,11 @@ trusted_agents_for_task(Task, Agents) :-
 
 +!prepare_site
    <- ?tuple_space_art_id(TupleSpaceId);
-      out(display_lock, owner)[artifact_id(TupleSpaceId)].
+      out(display_lock, owner)[artifact_id(TupleSpaceId)];
+      out(kitchen, 1)[artifact_id(TupleSpaceId)];
+      out(bathroom, 1)[artifact_id(TupleSpaceId)];
+      out(bedroom1, 1)[artifact_id(TupleSpaceId)];
+      out(bedroom2, 1)[artifact_id(TupleSpaceId)].
 
 +!gather_agent_capabilities
    <- println("Agent capabilities collection completed.").
