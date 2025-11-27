@@ -24,52 +24,68 @@ i_am_winning(Art) :- currentWinner(W)[artifact_id(Art)] & .my_name(Me) & .term2s
 +!discover_tuple_space
    <- lookupArtifact("tuple_space_id", TupleSpaceId);
       focus(TupleSpaceId);
-      // Store the TupleSpaceId as a belief for later use if needed
       +tuple_space_art_id(TupleSpaceId).
 
 +winner(Task)[source(Owner)] : not coordinating
    <- ?tuple_space_art_id(TupleSpaceId);
       .my_name(Me);
-      .term2string(Me, MeStr);  // ADD THIS
+      .term2string(Me, MeStr);
       +coordinating;
-      +my_winning_task(Task);
-      out(task_info, MeStr, Task)[artifact_id(TupleSpaceId)];  // STORE STRING
-      out(done, MeStr)[artifact_id(TupleSpaceId)];  // ALSO FIX THIS
+      out(task_info, MeStr, Task)[artifact_id(TupleSpaceId)];
+      out(ready, MeStr)[artifact_id(TupleSpaceId)];
       println(Me, " won task: ", Task);
-      .wait(1500);
+      .wait(4000);
       !show_shared_info.
 
 +winner(Task)[source(Owner)] : coordinating
    <- ?tuple_space_art_id(TupleSpaceId);
       .my_name(Me);
-      .term2string(Me, MeStr);  // ADD THIS
-      +my_winning_task(Task);
-      out(task_info, MeStr, Task)[artifact_id(TupleSpaceId)];  // STORE STRING
+      .term2string(Me, MeStr);
+      out(task_info, MeStr, Task)[artifact_id(TupleSpaceId)];
+      out(ready, MeStr)[artifact_id(TupleSpaceId)];
       println(Me, " won task: ", Task).
-// Step 5 - Plan for showing all shared info except own
+
 +!show_shared_info
    <- ?tuple_space_art_id(TupleSpaceId);
       .my_name(Me);
-      println(Me, " sees shared auction info:");
-      !collect_all_tuples(TupleSpaceId, []).
+      .term2string(Me, MeStr);
+      !wait_for_all_ready(TupleSpaceId);
+      !acquire_lock(TupleSpaceId, MeStr);
+      !read_display_restore(TupleSpaceId, MeStr);
+      !release_lock(TupleSpaceId, MeStr).
 
-+!collect_all_tuples(TupleSpaceId, Collected)
++!wait_for_all_ready(TupleSpaceId)
+   <- .wait(1000).
+
++!acquire_lock(TupleSpaceId, MeStr)
+   <- inp(display_lock, CurrentHolder)[artifact_id(TupleSpaceId)];
+      .wait(100);
+      !acquire_lock(TupleSpaceId, MeStr).
+
+-!acquire_lock(TupleSpaceId, MeStr)
+   <- out(display_lock, MeStr)[artifact_id(TupleSpaceId)].
+
++!read_display_restore(TupleSpaceId, MeStr)
+   <- !collect_all_tuples(TupleSpaceId);
+      println(MeStr, " sees shared auction info:");
+      for (temp_info(Agent, Task) & Agent \== MeStr) {
+         println("  Agent: ", Agent, " won Task: ", Task)
+      };
+      for (temp_info(Agent, Task)) {
+         out(task_info, Agent, Task)[artifact_id(TupleSpaceId)]
+      };
+      .abolish(temp_info(_,_)).
+
++!collect_all_tuples(TupleSpaceId)
    <- inp(task_info, Agent, Task)[artifact_id(TupleSpaceId)];
-      !collect_all_tuples(TupleSpaceId, [[Agent,Task]|Collected]).
+      +temp_info(Agent, Task);
+      !collect_all_tuples(TupleSpaceId).
 
--!collect_all_tuples(TupleSpaceId, Collected)
-   <- .my_name(Me);
-      !restore_and_display(TupleSpaceId, Collected, Me).
-
-+!restore_and_display(TupleSpaceId, [], Me)
+-!collect_all_tuples(TupleSpaceId)
    <- true.
 
-+!restore_and_display(TupleSpaceId, [[Agent,Task]|Rest], Me)
-   <- out(task_info, Agent, Task)[artifact_id(TupleSpaceId)];
-      .term2string(Me, MeStr);
-      if (Agent \== MeStr) {
-         println("  Agent: ", Agent, " won Task: ", Task);
-      } else {
-         println("DEBUG: FILTERED OUT my own task: ", Task);
-      };
-      !restore_and_display(TupleSpaceId, Rest, Me).
++!release_lock(TupleSpaceId, MeStr)
+   <- inp(display_lock, MeStr)[artifact_id(TupleSpaceId)].
+
+-!release_lock(TupleSpaceId, MeStr)
+   <- true.
