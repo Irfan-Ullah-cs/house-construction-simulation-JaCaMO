@@ -73,7 +73,7 @@ trusted_agents_for_task(Task, Agents) :-
    min_reputation(Min) &
    .findall(Ag, agent_can_do(Ag,Task) & reputation(Ag,Task,R) & R >= Min, Agents).
 
-!have_a_house.
+!start_auction.
 
 +sitePrepared : true <- .print("site has been prepared !!!! :-)").
 +interiorPainted : true <- .print("interior has been painted !!!! :-)").
@@ -86,29 +86,27 @@ trusted_agents_for_task(Task, Agents) :-
 +wallsBuilt : true <- .print("walls have been built !!!! :-)").
 +floorsLayed : true <- .print("floors have been layed !!!! :-)").
 
-+!have_a_house
-   <- !contract;
-      // !execute;   // Step 1: For shortcut version, do not run the organization-based execute
-      .
-
-+!have_a_house[source(self)]
-   <- !contract;
-      // !execute;   // Step 1: For shortcut version, do not run the organization-based execute
-      .
-
--!have_a_house[error(E),error_msg(Msg),code(Cmd),code_src(Src),code_line(Line)]
-   <- .print("Failed to build a house due to: ",Msg," (",E,"). Command: ",Cmd, " on ",Src,":", Line).
-
-+!contract : true
++!start_auction
    <- !presentation_phase;
       !wait_for_bids.
 
 +!presentation_phase
    <- println("Starting presentation phase.");
+      !discover_tuple_space;
+      !prepare_site;
       .wait(5000);
       println("Gathering agent information...");
       !gather_agent_capabilities;
       !invite_agents_to_auctions.
+
++!discover_tuple_space
+   <- lookupArtifact("tuple_space_id", TupleSpaceId);
+      focus(TupleSpaceId);
+      +tuple_space_art_id(TupleSpaceId).
+
++!prepare_site
+   <- ?tuple_space_art_id(TupleSpaceId);
+      out(display_lock, owner)[artifact_id(TupleSpaceId)].
 
 +!gather_agent_capabilities
    <- println("Agent capabilities collection completed.").
@@ -146,14 +144,9 @@ trusted_agents_for_task(Task, Agents) :-
       +agent_can_do(Ag, Task).
 
 +!wait_for_bids
-   <- println("Waiting for bids (15 seconds)...");
-      .wait(15000);
-      !show_winners;
-      
-      // ===== Step 5: Owner no longer triggers display of shared info =====
-      // .wait(2000); // Removed
-      // !show_shared_info; // Removed
-.
+   <- println("Waiting for bids (5 seconds)...");
+      .wait(5000);
+      !show_winners.
 
 +!show_winners
    <- for ( currentWinner(Ag)[artifact_id(ArtId)] ) {
@@ -161,17 +154,12 @@ trusted_agents_for_task(Task, Agents) :-
          ?task(Task)[artifact_id(ArtId)];
          println("Auction winner for task ", Task, ": ", Ag, " with bid ", Price);
          if (Ag \== "no_winner") {
-            .send(Ag, tell, winner(Task)); // Directly inform winner agent
-         } else {
-            println("No winner for Task: ", Task, " (no agent bid!)");
+            .send(Ag, tell, winner(Task))
          }
-      }.
-
-+!execute
-   <- println;
-      println("Starting execution phase.");
-      println("Waiting for user command to proceed.");
-      .
+      };
+      println("========================================");
+      println("AUCTION COMPLETE! To start execution, type: !go");
+      println("========================================").
 
 +!go <-
       .my_name(Me);
@@ -183,14 +171,14 @@ trusted_agents_for_task(Task, Agents) :-
       debug(inspector_gui(on))[artifact_id(GrArtId)];
       adoptRole(house_owner)[artifact_id(GrArtId)];
       focus(GrArtId);
-      !contract_winners("hsh_group"); 
+      !contract_winners("hsh_group");
       createScheme(bhsch, build_house_sch, SchArtId);
       debug(inspector_gui(on))[artifact_id(SchArtId)];
       focus(SchArtId);
       ?formationStatus(ok)[artifact_id(GrArtId)];
       addScheme("bhsch")[artifact_id(GrArtId)];
       commitMission("management_of_house_building")[artifact_id(SchArtId)];
-      .
+      .wait(120000).
 
 +!contract_winners(GroupName) : enough_winners
    <- for ( currentWinner(Ag)[artifact_id(ArtId)] ) {

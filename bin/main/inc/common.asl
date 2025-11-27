@@ -21,10 +21,16 @@ i_am_winning(Art) :- currentWinner(W)[artifact_id(Art)] & .my_name(Me) & .term2s
    <- lookupArtifact(ToolName,ToolId);
       focus(ToolId).
 
+-!discover_art(ToolName)
+   <- .wait(100);
+      !discover_art(ToolName).
+
 +!discover_tuple_space
    <- lookupArtifact("tuple_space_id", TupleSpaceId);
       focus(TupleSpaceId);
       +tuple_space_art_id(TupleSpaceId).
+
+// === ROOM COORDINATION (Exercise 2 Part 2) ===
 
 +winner(Task)[source(Owner)] : not coordinating
    <- ?tuple_space_art_id(TupleSpaceId);
@@ -67,7 +73,7 @@ i_am_winning(Art) :- currentWinner(W)[artifact_id(Art)] & .my_name(Me) & .term2s
 
 +!read_display_restore(TupleSpaceId, MeStr)
    <- !collect_all_tuples(TupleSpaceId);
-      println(MeStr, " sees shared auction info:");
+      println(MeStr, " sees room reservation info:");
       for (temp_info(Agent, Task) & Agent \== MeStr) {
          println("  Agent: ", Agent, " won Task: ", Task)
       };
